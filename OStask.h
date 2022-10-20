@@ -47,7 +47,9 @@ namespace ost {
     constexpr int PWORKSET_SIZE = 10;
     constexpr unsigned int PID_MIN = 0x4;
     constexpr unsigned int PID_MAX = 0xFFFFFFFC;
-
+    constexpr unsigned int FLAG_FBS = 1;
+    constexpr unsigned int DEFAULT_BTYPE = 1;
+    constexpr char BTYPE_NAME[4] = {' ','K','M','G'};
     struct ArguFunc {
         char shortName;
         std::string desc;
@@ -58,11 +60,15 @@ namespace ost {
                                                                                  func(std::move(func)) {};
     };
 
-    extern std::pair<char, int> divByte;
+    extern std::pair<char, unsigned long> divByte;
     extern const std::unordered_map<WORD, std::string> ARCH_LIST;
 
     inline void pLine() {
         printf("\n");
+    }
+
+    inline void btoStrDL(DWORDLONG src,PWSTR dst){
+        StrFormatByteSizeEx(src,FLAG_FBS,dst,MAX_PATH);
     }
 
     void showTotal();
@@ -78,6 +84,8 @@ namespace ost {
     void processInfo(DWORD pid);
 
     void printError(const std::string &msg);
+
+
 }
 
 

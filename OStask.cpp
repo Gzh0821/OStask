@@ -10,10 +10,18 @@ void ost::showTotal() {
         ost::printError("Get Memory Status");
     }
     printf("Percent of memory in use: %ld%%.\n", lpBuffer.dwMemoryLoad);
-    printf("\nPhysical memory usage:\n");
-    printf("    Available / Total: %*I64d / %*I64d %cB.\n",
-           ost::NUM_WIDTH, lpBuffer.ullAvailPhys / ost::divByte.second,
-           ost::NUM_WIDTH, lpBuffer.ullTotalPhys / ost::divByte.second, ost::divByte.first);
+    printf("\nPhysical memory usage:\n    Available / Total: ");
+    if (ost::divByte.first) {
+        printf("%*I64d / %*I64d %cB.\n",
+               ost::NUM_WIDTH, lpBuffer.ullAvailPhys / ost::divByte.second,
+               ost::NUM_WIDTH, lpBuffer.ullTotalPhys / ost::divByte.second, ost::divByte.first);
+    } else {
+        WCHAR szAvaSize[MAX_PATH];
+        WCHAR szTotSize[MAX_PATH];
+        ost::btoStrDL(lpBuffer.ullAvailPhys, szAvaSize);
+        ost::btoStrDL(lpBuffer.ullTotalPhys, szTotSize);
+        printf("%*ls / %*ls.\n", ost::NUM_WIDTH, szAvaSize, ost::NUM_WIDTH, szTotSize);
+    }
     putchar('\n');
 }
 
@@ -25,8 +33,11 @@ void ost::showSys() {
     auto &&sysType = ost::ARCH_LIST.at(si.wProcessorArchitecture);
     printf("[SYSTEM]:\n");
     printf("Process architecture: %s.\n", sysType.c_str());
-    printf("Number of logical processors: %ld.\n", si.dwNumberOfProcessors);
-    printf("Page size: %ld %cB.\n", si.dwPageSize / ost::divByte.second, ost::divByte.first);
+    printf("Number of logical processors: %ld.\nPage size: ", si.dwNumberOfProcessors);
+    WCHAR szPageSize[MAX_PATH];
+    ost::btoStrDL(si.dwPageSize, szPageSize);
+    printf("%ls.\n", szPageSize);
+
     printf("Accessible memory address range: 0x%p - 0x%p\n",
            si.lpMinimumApplicationAddress,
            si.lpMaximumApplicationAddress);
@@ -37,9 +48,12 @@ void ost::showPerformance() {
     PERFORMANCE_INFORMATION pi;
     pi.cb = sizeof(PERFORMANCE_INFORMATION);
     GetPerformanceInfo(&pi, pi.cb);
-    printf("[PERFORMANCE]:\n");
+    printf("[PERFORMANCE]:\nPage size: ");
 
-    printf("Page size: %llu %cB.\n", pi.PageSize / ost::divByte.second, ost::divByte.first);
+    WCHAR szPageSize[MAX_PATH];
+    ost::btoStrDL(pi.PageSize, szPageSize);
+    printf("%ls.\n", szPageSize);
+
     printf("Currently committed pages amount:\n");
     printf("    Current / Max: %llu / %llu.\n", pi.CommitTotal, pi.CommitLimit);
 
@@ -92,13 +106,22 @@ void ost::showEachProcess() {
         if (GetProcessMemoryInfo(pHandle, &pMemCount, sizeof(PROCESS_MEMORY_COUNTERS)) == TRUE) {
             printf("%-*lu", ost::PID_SIZE, pointOfSnap.th32ProcessID);
             printf("    %-*s", ost::PNAME_SIZE, pointOfSnap.szExeFile);
-            printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.WorkingSetSize / ost::divByte.second,
-                   ost::divByte.first);
-            printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.QuotaPagedPoolUsage / ost::divByte.second,
-                   ost::divByte.first);
+            if (ost::divByte.first) {
+                printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.WorkingSetSize / ost::divByte.second,
+                       ost::divByte.first);
+                printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.QuotaPagedPoolUsage / ost::divByte.second,
+                       ost::divByte.first);
+            } else {
+                WCHAR szWorkSize[MAX_PATH];
+                WCHAR szQuoSize[MAX_PATH];
+                ost::btoStrDL(pMemCount.WorkingSetSize, szWorkSize);
+                ost::btoStrDL(pMemCount.QuotaPagedPoolUsage, szQuoSize);
+                printf("    %-*ls", ost::PWORKSET_SIZE, szWorkSize);
+                printf("    %-*ls", ost::PWORKSET_SIZE, szQuoSize);
+            }
             putchar('\n');
         }
-        snapExist = Process32Next(hSnapShot, &pointOfSnap);//获取下一个进程的快照
+        snapExist = Process32Next(hSnapShot, &pointOfSnap);
     }
 
 }
@@ -155,6 +178,19 @@ void ost::processInfo(DWORD pid) {
     SYSTEM_INFO si;
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     GetSystemInfo(&si);
+
+    MEMORY_BASIC_INFORMATION mbi;  // 进程虚拟内存空间
+    ZeroMemory(&mbi, sizeof(MEMORY_BASIC_INFORMATION));
+
+    auto accAdd = si.lpMinimumApplicationAddress; // 起始内存地址
+    auto maxAdd = si.lpMaximumApplicationAddress; // 内存地址边界
+    while (accAdd < maxAdd) {
+        if (VirtualQueryEx(hp, accAdd,
+                           &mbi, sizeof(MEMORY_BASIC_INFORMATION))) {
+            LPCVOID endAdd = reinterpret_cast<PBYTE>(accAdd) + mbi.RegionSize;
+        }
+    }
+
 }
 
 void ost::printError(const std::string &msg) {
