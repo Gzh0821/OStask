@@ -89,6 +89,18 @@ namespace ost {
         StrFormatByteSizeEx(src, FLAG_FBS, dst, MAX_PATH);
     }
 
+    inline void printError(const std::string &msg) {
+        DWORD eNum;
+        TCHAR sysMsg[256];
+
+        eNum = GetLastError();
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                      nullptr, eNum,
+                      0, sysMsg, 256, nullptr);
+
+        printf("[ERROR]: %s failed with error no: %lu.\n%s\n", msg.c_str(), eNum, sysMsg);
+    }
+
     void showTotal();
 
     void showSys();
@@ -101,7 +113,6 @@ namespace ost {
 
     void processInfo(DWORD pid);
 
-    void printError(const std::string &msg);
 
 }
 

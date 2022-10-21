@@ -218,12 +218,12 @@ void ost::showHardwareInfo() {
 
 void ost::processInfo(DWORD pid) {
     printf("[PROCESS INFO]: id: %lu\n", pid);
+    printf("[FORMAT]:Region Address(Length) | Status | Protect | Type | Model\n");
     HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hp == nullptr) {
         ost::printError("Open process");
         return;
     }
-    printf("[FORMAT]:Region Address(Length) | Status | Protect | Type | Model\n");
     SYSTEM_INFO si;
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     GetSystemInfo(&si);
@@ -235,58 +235,49 @@ void ost::processInfo(DWORD pid) {
     auto maxAdd = si.lpMaximumApplicationAddress; // 内存地址边界
     while (accAdd < maxAdd) {
         if (VirtualQueryEx(hp, accAdd,
-                           &mbi, sizeof(MEMORY_BASIC_INFORMATION))) {
-            LPVOID endAdd = reinterpret_cast<PBYTE>(accAdd) + mbi.RegionSize;
-            printf("%0*llX - %0*llX", ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(accAdd),
-                   ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(endAdd));
-            if (ost::divByte.first) {
-                printf("(%llu%cB)\t", mbi.RegionSize / ost::divByte.second, ost::divByte.first);
-            } else {
-                WCHAR szRegSize[MAX_PATH] = {0};
-                ost::btoStrDL(mbi.RegionSize, szRegSize);
-                printf("(%ls)\t", szRegSize);
-            }
-            printf("%-*s\t", ost::SHORT_STR_LEN,
-                   ost::mbiStateMap.count(mbi.State) ?
-                   ost::mbiStateMap.at(mbi.State).c_str() :
-                   "Unknown");
-            if (mbi.Protect == 0 && mbi.State != MEM_FREE) {
-                mbi.Protect = PAGE_READONLY;
-            }
-            printf("%-*s ", ost::LONG_STR_LEN,
-                   ost::mbiProtectMap.count(mbi.Protect) ?
-                   ost::mbiProtectMap.at(mbi.Protect).c_str() :
-                   "Unknown");
-            printf("%-*s", ost::SHORT_STR_LEN,
-                   ost::mbiTypeMap.count(mbi.Type) ?
-                   ost::mbiTypeMap.at(mbi.Type).c_str() :
-                   "Unknown");
-            TCHAR szFilename[MAX_PATH];
-            //获取当前进程已加载模块的文件的路径
-            if (GetModuleFileName(
-                    reinterpret_cast<HMODULE>(accAdd),            //实际虚拟内存的模块句柄
-                    szFilename,                    //完全指定的文件名称
-                    MAX_PATH) > 0)                //实际使用的缓冲区长度
-            {
-                //除去路径并显示
-                PathStripPath(szFilename);
-                printf("\tModule: %s", szFilename);
-            }
-            putchar('\n');
-            accAdd = endAdd;
+                           &mbi,
+                           sizeof(MEMORY_BASIC_INFORMATION)) == 0) {
+            ost::printError("Get Virtual Memory");
+            break;
         }
+        LPVOID endAdd = reinterpret_cast<PBYTE>(accAdd) + mbi.RegionSize;
+        printf("%0*llX - %0*llX", ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(accAdd),
+               ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(endAdd));
+        if (ost::divByte.first) {
+            printf("(%llu%cB)\t", mbi.RegionSize / ost::divByte.second, ost::divByte.first);
+        } else {
+            WCHAR szRegSize[MAX_PATH] = {0};
+            ost::btoStrDL(mbi.RegionSize, szRegSize);
+            printf("(%ls)\t", szRegSize);
+        }
+        printf("%-*s\t", ost::SHORT_STR_LEN,
+               ost::mbiStateMap.count(mbi.State) ?
+               ost::mbiStateMap.at(mbi.State).c_str() :
+               "Unknown");
+        if (mbi.Protect == 0 && mbi.State != MEM_FREE) {
+            mbi.Protect = PAGE_READONLY;
+        }
+        printf("%-*s ", ost::LONG_STR_LEN,
+               ost::mbiProtectMap.count(mbi.Protect) ?
+               ost::mbiProtectMap.at(mbi.Protect).c_str() :
+               "Unknown");
+        printf("%-*s", ost::SHORT_STR_LEN,
+               ost::mbiTypeMap.count(mbi.Type) ?
+               ost::mbiTypeMap.at(mbi.Type).c_str() :
+               "Unknown");
+        TCHAR szFilename[MAX_PATH];
+        //获取当前进程已加载模块的文件的路径
+        if (GetModuleFileName(
+                reinterpret_cast<HMODULE>(accAdd),            //实际虚拟内存的模块句柄
+                szFilename,                    //完全指定的文件名称
+                MAX_PATH) > 0)                //实际使用的缓冲区长度
+        {
+            //除去路径并显示
+            PathStripPath(szFilename);
+            printf("\tModule: %s", szFilename);
+        }
+        putchar('\n');
+        accAdd = endAdd;
+
     }
-}
-
-void ost::printError(const std::string &msg) {
-    DWORD eNum;
-    TCHAR sysMsg[256];
-    TCHAR *p;
-
-    eNum = GetLastError();
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                  nullptr, eNum,
-                  0, sysMsg, 256, nullptr);
-
-    printf("[ERROR]: %s failed with error no: %lu.\n%s\n", msg.c_str(), eNum, sysMsg);
 }
