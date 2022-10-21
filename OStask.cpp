@@ -21,6 +21,12 @@
 #include "OStask.h"
 
 namespace ost {
+    const std::unordered_map<WORD, std::string> archList = {{9,      "x64"},
+                                                            {5,      "ARM"},
+                                                            {12,     "ARM64"},
+                                                            {6,      "Intel Itanium"},
+                                                            {0,      "x86"},
+                                                            {0xffff, "Unknown"}};
     const std::unordered_map<DWORD, std::string> mbiStateMap = {{MEM_COMMIT,  "Committed"},
                                                                 {MEM_FREE,    "Free"},
                                                                 {MEM_RESERVE, "Reserved"}};
@@ -71,7 +77,7 @@ void ost::showSys() {
 
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     GetSystemInfo(&si);
-    auto &&sysType = ost::ARCH_LIST.at(si.wProcessorArchitecture);
+    auto &&sysType = ost::archList.at(si.wProcessorArchitecture);
     printf("[SYSTEM]:\n");
     printf("Process architecture: %s.\n", sysType.c_str());
     printf("Number of logical processors: %ld.\nPage size: ", si.dwNumberOfProcessors);
@@ -129,7 +135,7 @@ void ost::showEachProcess() {
     printf("%-*s", ost::PID_SIZE, "ID");
     printf("\t%-*s", ost::PNAME_SIZE, "Name");
     printf("\t%-*s", ost::PWORKSET_SIZE, "WorkSet");
-    printf("\t\t%-*s", ost::PWORKSET_SIZE, "PagePool");
+    printf("\t%-*s", ost::PWORKSET_SIZE, "PagePool");
     putchar('\n');
 
     //循环获取进程信息
@@ -215,7 +221,9 @@ void ost::processInfo(DWORD pid) {
     HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hp == nullptr) {
         ost::printError("Open process");
+        return;
     }
+    printf("[FORMAT]:Region Address(Length) | Status | Protect | Type | Model\n");
     SYSTEM_INFO si;
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     GetSystemInfo(&si);

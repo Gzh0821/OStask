@@ -21,13 +21,6 @@
 #include "cmdline.h"
 
 namespace ost {
-    const std::unordered_map<WORD, std::string> ARCH_LIST = {{9,      "x64"},
-                                                             {5,      "ARM"},
-                                                             {12,     "ARM64"},
-                                                             {6,      "Intel Itanium"},
-                                                             {0,      "x86"},
-                                                             {0xffff, "Unknown"}};
-
     const std::map<std::string, ost::ArguFunc> funcMap = {
             {"perf",
                     ArguFunc('p', "show system performance value info.", &ost::showPerformance)},

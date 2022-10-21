@@ -80,7 +80,6 @@ namespace ost {
     };
 
     extern std::pair<char, unsigned long> divByte;
-    extern const std::unordered_map<WORD, std::string> ARCH_LIST;
 
     inline void pLine() {
         printf("\n");
