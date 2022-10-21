@@ -1,5 +1,26 @@
 #include "OStask.h"
 
+namespace ost {
+    const std::unordered_map<DWORD, std::string> mbiStateMap = {{MEM_COMMIT,  "Committed"},
+                                                                {MEM_FREE,    "Free"},
+                                                                {MEM_RESERVE, "Reserved"}};
+    const std::unordered_map<DWORD, std::string> mbiProtectMap = {{PAGE_EXECUTE,           "Exec"},
+                                                                  {PAGE_EXECUTE_READ,      "Read/Exec"},
+                                                                  {PAGE_EXECUTE_READWRITE, "Read/Write/Exec"},
+                                                                  {PAGE_EXECUTE_WRITECOPY, "Read/Copy/Exec"},
+                                                                  {PAGE_NOACCESS,          "No Access"},
+                                                                  {PAGE_READONLY,          "Read"},
+                                                                  {PAGE_READWRITE,         "Read/Write"},
+                                                                  {PAGE_WRITECOPY,         "Read/Copy"},
+                                                                  {PAGE_TARGETS_INVALID,   "Invalid"},
+                                                                  {PAGE_GUARD,             "Guard"},
+                                                                  {PAGE_NOCACHE,           "No Cache"},
+                                                                  {PAGE_WRITECOMBINE,      "Write Combine"},};
+    const std::unordered_map<DWORD, std::string> mbiTypeMap = {{MEM_IMAGE, "Image"},
+                                                               {MEM_MAPPED, "Mapped"},
+                                                               {MEM_PRIVATE, "Private"}};
+}
+
 
 void ost::showTotal() {
     printf("[TOTAL]:\n");
@@ -55,23 +76,23 @@ void ost::showPerformance() {
     printf("%ls.\n", szPageSize);
 
     printf("Currently committed pages amount:\n");
-    printf("    Current / Max: %llu / %llu.\n", pi.CommitTotal, pi.CommitLimit);
+    printf("\tCurrent / Max: %llu / %llu.\n", pi.CommitTotal, pi.CommitLimit);
 
     printf("Max committed pages amount in history: %llu\n\n", pi.CommitPeak);
 
     printf("Currently physical pages amount:\n");
-    printf("    Available / Max: %llu / %llu.\n", pi.PhysicalAvailable, pi.PhysicalTotal);
+    printf("\tAvailable / Max: %llu / %llu.\n", pi.PhysicalAvailable, pi.PhysicalTotal);
 
     printf("System cache pages amount: %llu.\n\n", pi.SystemCache);
 
     printf("Currently kernel pools:\n");
-    printf("    Paged/Nonpaged: %llu / %llu.\n    All: %llu.\n\n",
+    printf("\tPaged/Nonpaged: %llu / %llu.\n    All: %llu.\n\n",
            pi.KernelPaged, pi.KernelNonpaged, pi.KernelTotal);
 
     printf("Currently program amount:\n");
-    printf("    Opened handles: %lu\n", pi.HandleCount);
-    printf("    Processes: %lu\n", pi.ProcessCount);
-    printf("    Threads: %lu\n", pi.ThreadCount);
+    printf("\tOpened handles: %lu\n", pi.HandleCount);
+    printf("\tProcesses: %lu\n", pi.ProcessCount);
+    printf("\tThreads: %lu\n", pi.ThreadCount);
 
     putchar('\n');
 }
@@ -86,9 +107,9 @@ void ost::showEachProcess() {
     pointOfSnap.dwSize = sizeof(PROCESSENTRY32);
     printf("[PROCESS LIST]:\n");
     printf("%-*s", ost::PID_SIZE, "ID");
-    printf("    %-*s", ost::PNAME_SIZE, "Name");
-    printf("    %-*s", ost::PWORKSET_SIZE, "WorkSet");
-    printf("      %-*s", ost::PWORKSET_SIZE, "PagePool");
+    printf("\t%-*s", ost::PNAME_SIZE, "Name");
+    printf("\t%-*s", ost::PWORKSET_SIZE, "WorkSet");
+    printf("\t\t%-*s", ost::PWORKSET_SIZE, "PagePool");
     putchar('\n');
 
     //循环获取进程信息
@@ -105,19 +126,19 @@ void ost::showEachProcess() {
 
         if (GetProcessMemoryInfo(pHandle, &pMemCount, sizeof(PROCESS_MEMORY_COUNTERS)) == TRUE) {
             printf("%-*lu", ost::PID_SIZE, pointOfSnap.th32ProcessID);
-            printf("    %-*s", ost::PNAME_SIZE, pointOfSnap.szExeFile);
+            printf("\t%-*s", ost::PNAME_SIZE, pointOfSnap.szExeFile);
             if (ost::divByte.first) {
-                printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.WorkingSetSize / ost::divByte.second,
+                printf("\t%-*llu%cB", ost::PWORKSET_SIZE, pMemCount.WorkingSetSize / ost::divByte.second,
                        ost::divByte.first);
-                printf("    %-*llu%cB", ost::PWORKSET_SIZE, pMemCount.QuotaPagedPoolUsage / ost::divByte.second,
+                printf("\t%-*llu%cB", ost::PWORKSET_SIZE, pMemCount.QuotaPagedPoolUsage / ost::divByte.second,
                        ost::divByte.first);
             } else {
                 WCHAR szWorkSize[MAX_PATH];
                 WCHAR szQuoSize[MAX_PATH];
                 ost::btoStrDL(pMemCount.WorkingSetSize, szWorkSize);
                 ost::btoStrDL(pMemCount.QuotaPagedPoolUsage, szQuoSize);
-                printf("    %-*ls", ost::PWORKSET_SIZE, szWorkSize);
-                printf("    %-*ls", ost::PWORKSET_SIZE, szQuoSize);
+                printf("\t%-*ls", ost::PWORKSET_SIZE, szWorkSize);
+                printf("\t%-*ls", ost::PWORKSET_SIZE, szQuoSize);
             }
             putchar('\n');
         }
@@ -128,7 +149,7 @@ void ost::showEachProcess() {
 
 void ost::showHardwareInfo() {
     printf("[HARDWARE INFO]:\n");
-    printf("    [CPU]:\n");
+    printf("\t[CPU]:\n");
     int cpuInfo[4] = {-1};
     unsigned nExIds, i;
     char CPUBrandString[0x40];
@@ -138,7 +159,7 @@ void ost::showHardwareInfo() {
     memcpy(CPUBrandString, cpuInfo + 1, sizeof(int));
     memcpy(CPUBrandString + 4, cpuInfo + 3, sizeof(int));
     memcpy(CPUBrandString + 8, cpuInfo + 2, sizeof(int));
-    printf("    CPU Vendor: %s\n", CPUBrandString);
+    printf("\tCPU Vendor: %s\n", CPUBrandString);
 
     __cpuid(cpuInfo, 0x80000000);
     nExIds = cpuInfo[0];
@@ -152,19 +173,19 @@ void ost::showHardwareInfo() {
         else if (i == 0x80000004)
             memcpy(CPUBrandString + 32, cpuInfo, sizeof(cpuInfo));
     }
-    printf("    CPU Type: %s\n", CPUBrandString);
+    printf("\tCPU Type: %s\n", CPUBrandString);
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    printf("    Number of logical processors: %ld.\n\n", sysInfo.dwNumberOfProcessors);
-    printf("    [GPU]:\n");
+    printf("\tNumber of logical processors: %ld.\n\n", sysInfo.dwNumberOfProcessors);
+    printf("\t[GPU]:\n");
     for (int j = 0;; j++) {
         DISPLAY_DEVICE dd = {sizeof(dd), 0};
         BOOL f = EnumDisplayDevices(nullptr, j, &dd, EDD_GET_DEVICE_INTERFACE_NAME);
         if (!f)
             break;
-        printf("    %s\n", dd.DeviceName);
-        printf("    %s\n", dd.DeviceString);
+        printf("\t%s\n", dd.DeviceName);
+        printf("\t%s\n", dd.DeviceString);
     }
     putchar('\n');
 }
@@ -187,10 +208,46 @@ void ost::processInfo(DWORD pid) {
     while (accAdd < maxAdd) {
         if (VirtualQueryEx(hp, accAdd,
                            &mbi, sizeof(MEMORY_BASIC_INFORMATION))) {
-            LPCVOID endAdd = reinterpret_cast<PBYTE>(accAdd) + mbi.RegionSize;
+            LPVOID endAdd = reinterpret_cast<PBYTE>(accAdd) + mbi.RegionSize;
+            printf("%0*llX - %0*llX", ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(accAdd),
+                   ost::ADD_LEN, reinterpret_cast<ULONG_PTR>(endAdd));
+            if (ost::divByte.first) {
+                printf("(%llu%cB)\t", mbi.RegionSize / ost::divByte.second, ost::divByte.first);
+            } else {
+                WCHAR szRegSize[MAX_PATH] = {0};
+                ost::btoStrDL(mbi.RegionSize, szRegSize);
+                printf("(%ls)\t", szRegSize);
+            }
+            printf("%-*s\t", ost::SHORT_STR_LEN,
+                   ost::mbiStateMap.count(mbi.State) ?
+                   ost::mbiStateMap.at(mbi.State).c_str() :
+                   "Unknown");
+            if (mbi.Protect == 0 && mbi.State != MEM_FREE) {
+                mbi.Protect = PAGE_READONLY;
+            }
+            printf("%-*s ", ost::LONG_STR_LEN,
+                   ost::mbiProtectMap.count(mbi.Protect) ?
+                   ost::mbiProtectMap.at(mbi.Protect).c_str() :
+                   "Unknown");
+            printf("%-*s", ost::SHORT_STR_LEN,
+                   ost::mbiTypeMap.count(mbi.Type) ?
+                   ost::mbiTypeMap.at(mbi.Type).c_str() :
+                   "Unknown");
+            TCHAR szFilename[MAX_PATH];
+            //获取当前进程已加载模块的文件的路径
+            if (GetModuleFileName(
+                    reinterpret_cast<HMODULE>(accAdd),            //实际虚拟内存的模块句柄
+                    szFilename,                    //完全指定的文件名称
+                    MAX_PATH) > 0)                //实际使用的缓冲区长度
+            {
+                //除去路径并显示
+                PathStripPath(szFilename);
+                printf("\tModule: %s", szFilename);
+            }
+            putchar('\n');
+            accAdd = endAdd;
         }
     }
-
 }
 
 void ost::printError(const std::string &msg) {

@@ -38,8 +38,6 @@
 namespace ost {
     constexpr int NUM_WIDTH = 7;
     constexpr int DIV = 1024;
-    constexpr int SH_STR_LEN = 48;
-    constexpr int FLUSH_TIME = 1000;
     constexpr int MIN_TIME = 1;
     constexpr int MAX_TIME = 65535;
     constexpr int PID_SIZE = 8;
@@ -49,7 +47,11 @@ namespace ost {
     constexpr unsigned int PID_MAX = 0xFFFFFFFC;
     constexpr unsigned int FLAG_FBS = 1;
     constexpr unsigned int DEFAULT_BTYPE = 1;
-    constexpr char BTYPE_NAME[4] = {' ','K','M','G'};
+    constexpr unsigned int ADD_LEN = 16;
+    constexpr unsigned int LONG_STR_LEN = 16;
+    constexpr unsigned int SHORT_STR_LEN = 10;
+    constexpr char BTYPE_NAME[4] = {' ', 'K', 'M', 'G'};
+
     struct ArguFunc {
         char shortName;
         std::string desc;
@@ -67,8 +69,8 @@ namespace ost {
         printf("\n");
     }
 
-    inline void btoStrDL(DWORDLONG src,PWSTR dst){
-        StrFormatByteSizeEx(src,FLAG_FBS,dst,MAX_PATH);
+    inline void btoStrDL(DWORDLONG src, PWSTR dst) {
+        StrFormatByteSizeEx(src, FLAG_FBS, dst, MAX_PATH);
     }
 
     void showTotal();
