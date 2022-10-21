@@ -98,7 +98,7 @@ namespace ost {
                       nullptr, eNum,
                       0, sysMsg, 256, nullptr);
 
-        printf("[ERROR]: %s failed with error no: %lu.\n%s\n", msg.c_str(), eNum, sysMsg);
+        printf("[ERROR]: %s failed with error no: 0x%lx.\n%s\n", msg.c_str(), eNum, sysMsg);
     }
 
     void showTotal();
