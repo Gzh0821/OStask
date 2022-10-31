@@ -89,13 +89,22 @@ void ost::showSys() {
     printf("[SYSTEM]:\n");
     printf("Process architecture: %s.\n", sysType.c_str());
 
+
     // 逻辑处理器数量
-    printf("Number of logical processors: %ld.\nPage size: ", si.dwNumberOfProcessors);
+    printf("Number of logical processors: %ld.\n", si.dwNumberOfProcessors);
 
     // 页面大小
     WCHAR szPageSize[MAX_PATH];
     ost::btoStrDL(si.dwPageSize, szPageSize);
-    printf("%ls.\n", szPageSize);
+    printf("Page size: %ls.\n", szPageSize);
+
+    // 物理内存大小
+    ULONGLONG ramSize;
+    GetPhysicallyInstalledSystemMemory(&ramSize);
+    ramSize *= 1024;
+    WCHAR szRamSize[MAX_PATH];
+    ost::btoStrDL(ramSize, szRamSize);
+    printf("Physical Memory(RAM): %ls.\n", szRamSize);
 
     // 可访问内存地址范围
     printf("Accessible memory address range: 0x%p - 0x%p.\n",
@@ -220,7 +229,7 @@ void ost::showHardwareInfo() {
     memcpy(CPUBrandString + 4, cpuInfo + 3, sizeof(int));
     memcpy(CPUBrandString + 8, cpuInfo + 2, sizeof(int));
     // CPU供应商
-    printf("\tCPU Vendor: %s\n", CPUBrandString);
+    printf("\tCPU Vendor: %s.\n", CPUBrandString);
 
     __cpuid(cpuInfo, 0x80000000);
     nExIds = cpuInfo[0];
@@ -235,12 +244,19 @@ void ost::showHardwareInfo() {
             memcpy(CPUBrandString + 32, cpuInfo, sizeof(cpuInfo));
     }
     // CPU类型名
-    printf("\tCPU Type: %s\n", CPUBrandString);
+    printf("\tCPU Type: %s.\n", CPUBrandString);
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
+
+    // CPU架构
+    auto &&sysType = ost::archList.count(sysInfo.wProcessorArchitecture) ?
+                     ost::archList.at(sysInfo.wProcessorArchitecture) : "Unable";
+
+    printf("\tProcess architecture: %s.\n", sysType.c_str());
     // CPU逻辑处理器数量
     printf("\tNumber of logical processors: %ld.\n\n", sysInfo.dwNumberOfProcessors);
+
 
     // GPU
     printf("[GPU]:\n");
@@ -261,14 +277,21 @@ void ost::showHardwareInfo() {
 // 显示单个进程信息
 void ost::processInfo(DWORD pid) {
     printf("[PROCESS INFO]: id: %lu\n", pid);
-    printf("[FORMAT]:Region Address(Length) | Status | Protect | Type | Model\n");
+
     // 打开进程快照
     HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hp == nullptr) {
         ost::printError("Open process");
         return;
     }
+    DWORD len = MAX_PATH;
 
+    // 获取进程路径名
+    CHAR szProName[MAX_PATH];
+    QueryFullProcessImageName(hp,0,szProName,&len);
+    printf("[PATH]: %s\n", szProName);
+
+    printf("[FORMAT]:Region Address(Length) | Status | Protect | Type | Model\n");
     SYSTEM_INFO si;
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     GetSystemInfo(&si);

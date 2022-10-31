@@ -47,22 +47,36 @@
 #pragma comment(lib, "user32.lib")
 
 namespace ost {
+    // 数据宽度
     constexpr int NUM_WIDTH = 7;
+    // 用于字节转换
     constexpr int DIV = 1024;
+    // 程序循环次数的的上下届
     constexpr int MIN_TIME = 1;
     constexpr int MAX_TIME = 65535;
+    // 进程id长度限制
     constexpr int PID_SIZE = 8;
+    // 进程名长度限制
     constexpr int PNAME_SIZE = 40;
+    // 进程工作集长度限制
     constexpr int PWORKSET_SIZE = 10;
+    // 进程id的上下界
     constexpr unsigned int PID_MIN = 0x4;
     constexpr unsigned int PID_MAX = 0xFFFFFFFC;
+    // StrFormatByteSizeEx 函数标志位
     constexpr unsigned int FLAG_FBS = 1;
+    // 默认单位，1，2，3，4为KB,MB,GB,TB
     constexpr unsigned int DEFAULT_BTYPE = 1;
+    // 地址长度限制
     constexpr unsigned int ADD_LEN = 16;
+    // 长字符串长度限制
     constexpr unsigned int LONG_STR_LEN = 16;
+    // 短字符串长度限制
     constexpr unsigned int SHORT_STR_LEN = 10;
+    // 单位名称
     constexpr char BTYPE_NAME[4] = {' ', 'K', 'M', 'G'};
 
+    // 参数和函数绑定结构
     struct ArguFunc {
         char shortName;
         std::string desc;
@@ -72,17 +86,15 @@ namespace ost {
                                                                                  desc(std::move(desc)),
                                                                                  func(std::move(func)) {};
     };
-
+    // 用于设置字节
     extern std::pair<char, unsigned long> divByte;
 
-    inline void pLine() {
-        printf("\n");
-    }
-
+    // 将byte转换为合适的单位
     inline void btoStrDL(DWORDLONG src, PWSTR dst) {
         StrFormatByteSizeEx(src, FLAG_FBS, dst, MAX_PATH);
     }
 
+    // 输出错误
     inline void printError(const std::string &msg) {
         DWORD eNum;
         TCHAR sysMsg[256];
