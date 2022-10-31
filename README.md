@@ -1,8 +1,8 @@
 # OStask
 
 ![](https://img.shields.io/badge/author-Gaozih-%2366ccff)
-![](https://img.shields.io/github/license/Gzh0821/Optimization_project)
-![](https://img.shields.io/github/stars/Gzh0821/Optimization_project)
+![](https://img.shields.io/github/license/Gzh0821/OStask)
+![](https://img.shields.io/github/stars/Gzh0821/OStask)
 
 ## Introduce
 
