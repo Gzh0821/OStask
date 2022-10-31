@@ -15,6 +15,7 @@
 #include "cmdline.h"
 
 namespace ost {
+    // 程序功能表
     const std::map<std::string, ost::ArguFunc> funcMap = {
             {"perf",
                     ArguFunc('p', "show system performance value info.", &ost::showPerformance)},
@@ -27,16 +28,20 @@ namespace ost {
             {"hardware",
                     ArguFunc('w', "show PC hardware information.", &ost::showHardwareInfo)}
     };
+    // 程序显示单位(B,KB,MB,GB)
     std::pair<char, unsigned long> divByte;
 }
 
 int main(int argc, char **argv) {
+    // 默认单位，前项若为0则为自动
     ost::divByte = std::make_pair(0, 1);
+    // 命令行参数处理
     cmdline::parser par;
+
     std::ios::sync_with_stdio();
 
     par.set_program_name("OStask");
-
+    // 增加参数类型
     par.add<unsigned long>("inquire", 'i', "Inquire the selected process info.",
                            false, ost::PID_MIN, cmdline::range<unsigned long>(ost::PID_MIN, ost::PID_MAX));
     par.add<unsigned int>("loop", 'l', "loop this program from [1-65535] second.",
@@ -51,10 +56,12 @@ int main(int argc, char **argv) {
     for (auto &&[arg, arf]: ost::funcMap) {
         par.add(arg, arf.shortName, arf.desc);
     }
+    // 若有help或无参，显示帮助信息
     if (argc <= 1 || !par.parse(argc, argv) || par.exist("help")) {
         std::cout << par.error() << par.usage();
         return 0;
     }
+    // 显示开源协议
     if (par.exist("copyright")) {
         std::cout << "[LICENSE]:\n"
                      "\n"
@@ -74,6 +81,7 @@ int main(int argc, char **argv) {
                      "\n";
         return 0;
     }
+    // 设置程序使用的单位
     if (par.exist("type")) {
         int type = par.get<int>("type");
         ost::divByte.first = ost::BTYPE_NAME[type];
@@ -81,17 +89,20 @@ int main(int argc, char **argv) {
             ost::divByte.second *= ost::DIV;
     }
 
+    // 根据参数调用函数表
     auto doFunc = [&]() {
         for (auto &&[arg, arf]: ost::funcMap)
             if (par.exist("all") || par.exist(arg))
                 arf.func();
     };
 
+    // 查询单个进程
     if (par.exist("inquire")) {
         auto pid = par.get<unsigned long>("inquire");
         ost::processInfo(pid);
         return 0;
     }
+    // 循环执行程序
     if (par.exist("loop")) {
         auto loopCount = par.get<unsigned int>("loop");
         while (loopCount--) {
@@ -101,6 +112,7 @@ int main(int argc, char **argv) {
             Sleep(1000);
         }
     } else
+        // 默认执行
         doFunc();
     return 0;
 }
