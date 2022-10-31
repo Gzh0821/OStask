@@ -1,5 +1,11 @@
 # OStask
 
+![](https://img.shields.io/badge/author-Gaozih-%2366ccff)
+![](https://img.shields.io/github/license/Gzh0821/Optimization_project)
+![](https://img.shields.io/github/stars/Gzh0821/Optimization_project)
+
+## Introduce
+
 A Windows Command tools to check OS,memory and process infomation.
 
-一个操作系统课程实验作业。
+这是一个操作系统课程实验作业。
