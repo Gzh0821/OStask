@@ -6,6 +6,14 @@
 
 ## Introduce
 
-A Windows Command tools to check OS,memory and process infomation.
+A Windows Command tools to check OS, hardware, memory and process infomation.
 
-这是一个操作系统课程实验作业。
+一个简易的Windows终端程序，用于查看系统，内存，硬件和处理器，进程信息。
+
+Invoke the program with no arguments in a terminal to show usage.
+
+在终端中无参调用程序以查看使用方法。
+
+可以用于操作系统课程实验作业。
+
+
